@@ -1,3 +1,6 @@
+# Load model when server starts
+from backend.model_loader import load_model
+load_model()
 import os
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
