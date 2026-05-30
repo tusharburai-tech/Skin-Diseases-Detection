@@ -1,34 +1,36 @@
 import os
-import gdown
+from huggingface_hub import hf_hub_download
 from tensorflow.keras.models import load_model
 
-# Resolve to project ROOT (one level above /backend/)
 BASE_DIR   = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MODEL_DIR  = os.path.join(BASE_DIR, "models")
 MODEL_PATH = os.path.join(MODEL_DIR, "skin_model.h5")
 
-FILE_ID = "1S2tDM5qMhqnDgx7fMK4o5aq2uzQxFfjn"
+# 👇 Replace with YOUR actual Hugging Face username and repo name
+HF_REPO_ID  = "tusharburai/Skin-Disease-Detection"
+HF_FILENAME = "skin_model.h5"
 
 os.makedirs(MODEL_DIR, exist_ok=True)
 
-_model = None  # module-level cache — loads only once
+_model = None
 
 def load_skin_model():
-    global _model
+    global _model   
     if _model is not None:
-        return _model  # already loaded, reuse
+        return _model
 
     if not os.path.exists(MODEL_PATH):
-        print("⬇️  Model not found — downloading from Google Drive...")
-        url = f"https://drive.google.com/uc?id={FILE_ID}"
+        print("⬇️  Downloading model from Hugging Face...")
         try:
-            gdown.download(url, MODEL_PATH, quiet=False)
+            downloaded_path = hf_hub_download(
+                repo_id=HF_REPO_ID,
+                filename=HF_FILENAME,
+                local_dir=MODEL_DIR,
+            )
+            print(f"✅ Downloaded to: {downloaded_path}")
         except Exception as e:
             print(f"❌ Download failed: {e}")
             return None
-
-    print(f"📁 Model path : {MODEL_PATH}")
-    print(f"✅ File exists : {os.path.exists(MODEL_PATH)}")
 
     try:
         _model = load_model(MODEL_PATH)
