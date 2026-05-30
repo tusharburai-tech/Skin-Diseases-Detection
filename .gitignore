@@ -3,4 +3,5 @@ __pycache__/
 venv/
 models/
 dataset/
-.DS_Store
+.DS_Storeupload.py
+.vscode/
