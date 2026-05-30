@@ -5,7 +5,8 @@ import os
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from backend.predict import predict_image
-
+MODEL_PATH = os.path.join("models", "skin_model.h5")
+model = load_model(MODEL_PATH)
 app = Flask(__name__, template_folder="../templates", static_folder="../static")
 CORS(app)
 
