@@ -1,16 +1,17 @@
 # Load model when server starts
-from backend.model_loader import model
+from backend.model_loader import load_skin_model
+
+model = load_skin_model()
 import os
-print("Current working dir:", os.getcwd())
-print("Backend files:", os.listdir("backend"))
-print("Models folder:", os.listdir("backend/models"))
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
+from backend.model_loader import load_skin_model
 from backend.predict import predict_image
-MODEL_PATH = os.path.join("models", "skin_model.h5")
-model = load_model(MODEL_PATH)
+model = load_skin_model()
+
 app = Flask(__name__, template_folder="../templates", static_folder="../static")
 CORS(app)
+
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "..", "static", "uploaded_images")
