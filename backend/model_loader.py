@@ -9,13 +9,11 @@ MODEL_PATH = os.path.join(MODEL_DIR, "skin_model.h5")
 # Create models folder
 os.makedirs(MODEL_DIR, exist_ok=True)
 
-# Google Drive File ID
-FILE_ID = "1S2tDM5qMhqnDgx7fMK4o5aq2uzQxFfjn"
 
 # Download model if not exists
 if not os.path.exists(MODEL_PATH):
     print("⬇️ Downloading model from Google Drive...")
-    url = f"https://drive.google.com/uc?id={FILE_ID}"
+    url = f"https://drive.google.com/file/d/1S2tDM5qMhqnDgx7fMK4o5aq2uzQxFfjn/view?usp=drive_link"
     gdown.download(url, MODEL_PATH, quiet=False)
 
 # Load model
