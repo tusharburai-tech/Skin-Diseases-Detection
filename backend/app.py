@@ -1,7 +1,9 @@
 # Load model when server starts
-from backend.model_loader import load_model
-load_model()
+from backend.model_loader import model
 import os
+print("Current working dir:", os.getcwd())
+print("Backend files:", os.listdir("backend"))
+print("Models folder:", os.listdir("backend/models"))
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from backend.predict import predict_image
