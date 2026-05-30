@@ -1,14 +1,20 @@
 import os
-from tensorflow.keras.models import load_model
+import tensorflow as tf
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-MODEL_PATH = os.path.join(BASE_DIR, "models", "skin_model.h5")
+MODEL_PATH = "/opt/render/project/src/models/skin_model.h5"
 
 model = None
 
-if os.path.exists(MODEL_PATH):
-    model = load_model(MODEL_PATH)
-    print("✅ Model loaded successfully")
-else:
-    print("❌ Model not found at:", MODEL_PATH)
+def load_model():
+    global model
+    if model is None:
+        if not os.path.exists(MODEL_PATH):
+            print("Downloading model...")
+            os.makedirs(os.path.dirname(MODEL_PATH), exist_ok=True)
+            import gdown
+            gdown.download(
+                "https://drive.google.com/uc?id=1S2tDM5qMhqnDgx7fMK4o5aq2uzQxFfjn",
+                MODEL_PATH, quiet=False
+            )
+        model = tf.keras.models.load_model(MODEL_PATH)
+    return model
