@@ -1,14 +1,30 @@
 import os
+import gdown
 from tensorflow.keras.models import load_model
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_DIR = os.path.join(BASE_DIR, "models")
+MODEL_PATH = os.path.join(MODEL_DIR, "skin_model.h5")
 
-MODEL_PATH = os.path.join(BASE_DIR, "models", "skin_model.h5")
+# Create models folder
+os.makedirs(MODEL_DIR, exist_ok=True)
 
+# Google Drive File ID
+FILE_ID = "1S2tDM5qMhqnDgx7fMK4o5aq2uzQxFfjn"
+
+# Download model if not exists
+if not os.path.exists(MODEL_PATH):
+    print("⬇️ Downloading model from Google Drive...")
+    url = f"https://drive.google.com/uc?id={FILE_ID}"
+    gdown.download(url, MODEL_PATH, quiet=False)
+
+# Load model
 model = None
-
-if os.path.exists(MODEL_PATH):
-    model = load_model(MODEL_PATH)
-    print("✅ Model loaded successfully")
-else:
-    print("❌ Model NOT FOUND at:", MODEL_PATH)
+try:
+    if os.path.exists(MODEL_PATH):
+        model = load_model(MODEL_PATH)
+        print("✅ Model loaded successfully")
+    else:
+        print("❌ Model file not found after download")
+except Exception as e:
+    print("❌ Error loading model:", e)
