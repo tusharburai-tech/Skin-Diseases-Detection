@@ -1,25 +1,25 @@
+from backend.model_loader import load_skin_model
 import numpy as np
-from backend.model_loader import load_model
-from utils.preprocess import preprocess_image
-from utils.labels import labels
+from tensorflow.keras.preprocessing import image
 
-def predict_image(image_path):
-    model = load_model()
-    processed = preprocess_image(image_path)
-    predictions = model.predict(processed)[0]
+# Load model once
+model = load_skin_model()
 
-    top_indices = np.argsort(predictions)[::-1][:3]
+def predict_image(img_path):
+    try:
+        img = image.load_img(img_path, target_size=(224, 224))
+        img_array = image.img_to_array(img) / 255.0
+        img_array = np.expand_dims(img_array, axis=0)
 
-    top3 = [
-        {
-            "label": labels[i],
-            "confidence": round(float(predictions[i]) * 100, 2)
+        preds = model.predict(img_array)
+
+        predicted_class = np.argmax(preds)
+        confidence = float(np.max(preds))
+
+        return {
+            "prediction": str(predicted_class),
+            "confidence": confidence
         }
-        for i in top_indices
-    ]
 
-    return {
-        "prediction": top3[0]["label"],
-        "confidence": top3[0]["confidence"],
-        "top3": top3
-    }
+    except Exception as e:
+        return {"error": str(e)}

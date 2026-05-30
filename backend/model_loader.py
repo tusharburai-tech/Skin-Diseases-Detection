@@ -5,7 +5,8 @@ from tensorflow.keras.models import load_model
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODEL_DIR = os.path.join(BASE_DIR, "models")
 MODEL_PATH = os.path.join(MODEL_DIR, "skin_model.h5")
-
+print("Model path:", MODEL_PATH)
+print("Exists before load:", os.path.exists(MODEL_PATH))
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 FILE_ID = "1S2tDM5qMhqnDgx7fMK4o5aq2uzQxFfjn"
