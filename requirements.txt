@@ -1,7 +1,7 @@
-flask
-flask-cors
-tensorflow
-pillow
-numpy
-gunicorn
-gdown
+flask>=2.3,<3.0
+flask-cors>=4.0
+tensorflow-cpu==2.15.0
+pillow>=10.0
+numpy>=1.24,<2.0
+gunicorn>=21.0
+gdown>=4.7
