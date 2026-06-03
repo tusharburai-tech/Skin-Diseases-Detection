@@ -1,9 +1,11 @@
+cat > render.yaml << 'EOF'
 services:
   - type: web
     name: skin-diseases-detection
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn backend.app:app --config gunicorn.conf.py
+    startCommand: gunicorn main:app --config gunicorn.conf.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.0
+EOF
