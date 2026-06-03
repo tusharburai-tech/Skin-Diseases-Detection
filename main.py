@@ -5,6 +5,7 @@ from flask_cors import CORS
 from PIL import Image
 import io
 import base64
+from backend.model_loader import load_skin_model
 
 app = Flask(__name__)
 CORS(app)
@@ -289,9 +290,11 @@ model = None
 def load_model():
     global model
     try:
-        import tensorflow as tf
-        model = tf.keras.models.load_model(MODEL_PATH)
-        print(f"✅ Model loaded — output classes: {model.output_shape[-1]}")
+        model = load_skin_model()
+        if model is not None:
+            print(f"✅ Model loaded — output classes: {model.output_shape[-1]}")
+        else:
+            print("⚠️ Model loader returned None")
     except Exception as e:
         print(f"⚠️  Could not load model: {e}")
         model = None
@@ -337,7 +340,7 @@ def predict():
 
     if model is None:
         return jsonify({
-            "error": "Model not loaded. Check that models/skin_model.h5 exists.",
+            "error": "Model not loaded. The model file could not be downloaded from Hugging Face or is missing.",
             "image": image_data_url,
         }), 500
 
