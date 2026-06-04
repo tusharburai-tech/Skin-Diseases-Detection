@@ -1,4 +1,3 @@
-cat > backend/model_loader.py << 'EOF'
 import os
 import shutil
 from huggingface_hub import hf_hub_download
@@ -42,4 +41,3 @@ def load_skin_model():
         if os.path.exists(MODEL_PATH):
             os.remove(MODEL_PATH)
         return None
-EOF
