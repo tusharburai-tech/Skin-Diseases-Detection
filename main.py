@@ -155,9 +155,6 @@ def load_skin_model():
         model = None
 
 
-# Load model at startup
-load_skin_model()
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 def preprocess_image(image_bytes):
