@@ -104,8 +104,9 @@ DISEASE_INFO = {
 }
 
 # ── Model loading ─────────────────────────────────────────────────────────────
-model       = None
-load_error  = ""
+model        = None
+load_error   = ""
+model_status = "loading"
 
 
 def download_from_hf():
@@ -130,11 +131,10 @@ def download_from_hf():
         print(f"❌ Hugging Face download failed: {e}")
         return False
 
-
 def load_skin_model():
-    global model, load_error
-    if model is not None:
-        return
+    global model, load_error, model_status
+    model_status = "loading"
+
 
     if not os.path.exists(MODEL_PATH):
         ok = download_from_hf()
@@ -146,14 +146,26 @@ def load_skin_model():
         print(f"📂 Loading model from: {MODEL_PATH}")
         model = tf.keras.models.load_model(MODEL_PATH)
         print(f"✅ Model loaded — output classes: {model.output_shape[-1]}")
-        load_error = ""
+        load_error   = ""
+        model_status = "ready"
     except Exception as e:
         load_error = str(e)
         print(f"❌ Could not load model: {e}")
         if os.path.exists(MODEL_PATH):
             os.remove(MODEL_PATH)
-        model = None
+         model        = None
+        model_status = "failed"
 
+
+# ── Helpers
+
+
+# ── Helpers
+
+
+
+# ── Start model loading in background (port binds immediately) ────────────────
+threading.Thread(target=load_skin_model, daemon=True).start()
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -198,13 +210,14 @@ def debug():
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    # Try loading model again if it failed at startup
-    if model is None:
-        load_skin_model()
+    if model_status == "loading":
+        return jsonify({
+            "error": "Model is still loading, please wait 30 seconds and try again."
+        }), 503
 
     if model is None:
         return jsonify({
-            "error": f"Model not loaded. Reason: {load_error or 'Unknown error'}. Visit /debug for details."
+            "error": f"Model failed to load. Reason: {load_error}. Visit /debug for details."
         }), 500
 
     if "image" not in request.files:
