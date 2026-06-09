@@ -142,27 +142,27 @@ def load_skin_model():
             return
 
     try:
-        import tensorflow as tf
-        print(f"📂 Loading model from: {MODEL_PATH}")
-        model = tf.keras.models.load_model(MODEL_PATH)
-        print(f"✅ Model loaded — output classes: {model.output_shape[-1]}")
-        load_error   = ""
-        model_status = "ready"
-    except Exception as e:
-        load_error = str(e)
-        print(f"❌ Could not load model: {e}")
-        if os.path.exists(MODEL_PATH):
-            os.remove(MODEL_PATH)
-         model        = None
-        model_status = "failed"
+    import tensorflow as tf
 
+    print(f"📂 Loading model from: {MODEL_PATH}")
 
-# ── Helpers
+    model = tf.keras.models.load_model(MODEL_PATH)
 
+    print(f"✅ Model loaded — output classes: {model.output_shape[-1]}")
 
-# ── Helpers
+    load_error = ""
+    model_status = "ready"
 
+except Exception as e:
+    load_error = str(e)
+    print(f"❌ Could not load model: {e}")
 
+    # ❌ DO NOT DELETE MODEL FILE
+    # if os.path.exists(MODEL_PATH):
+    #     os.remove(MODEL_PATH)
+
+    model = None   # ✅ FIXED
+    model_status = "failed"
 
 # ── Start model loading in background (port binds immediately) ────────────────
 threading.Thread(target=load_skin_model, daemon=True).start()
