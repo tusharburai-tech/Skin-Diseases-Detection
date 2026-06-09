@@ -2,10 +2,12 @@ import os
 import io
 import base64
 import shutil
+import threading
 import numpy as np
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from PIL import Image
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 CORS(app)
@@ -139,6 +141,7 @@ def load_skin_model():
     if not os.path.exists(MODEL_PATH):
         ok = download_from_hf()
         if not ok:
+            model_status = "failed"
             return
 
     try:
@@ -153,15 +156,8 @@ def load_skin_model():
         print(f"❌ Could not load model: {e}")
         if os.path.exists(MODEL_PATH):
             os.remove(MODEL_PATH)
-         model        = None
+        model        = None
         model_status = "failed"
-
-
-# ── Helpers
-
-
-# ── Helpers
-
 
 
 # ── Start model loading in background (port binds immediately) ────────────────
@@ -200,6 +196,7 @@ def index():
 def debug():
     return jsonify({
         "model_loaded":   model is not None,
+        "model_status":   model_status,
         "model_path":     MODEL_PATH,
         "model_exists_on_disk": os.path.exists(MODEL_PATH),
         "HF_REPO_ID":     HF_REPO_ID or "NOT SET",
@@ -233,7 +230,7 @@ def predict():
         return jsonify({"error": f"Unsupported file type: {ext}"}), 400
 
     image_bytes = file.read()
-    save_path   = os.path.join(UPLOAD_FOLDER, file.filename)
+    save_path   = os.path.join(UPLOAD_FOLDER, secure_filename(file.filename))
     with open(save_path, "wb") as f:
         f.write(image_bytes)
 
