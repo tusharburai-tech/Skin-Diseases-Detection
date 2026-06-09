@@ -1,7 +1,6 @@
 import os
 import shutil
 from huggingface_hub import hf_hub_download
-from tensorflow.keras.models import load_model
 
 HF_REPO_ID  = os.environ.get("HF_REPO_ID", "tusharburai/Skin-Disease-Detection")
 HF_FILENAME = "skin_model.h5"
@@ -33,6 +32,7 @@ def load_skin_model():
             print(f"❌ Download failed: {e}")
             return None
     try:
+        from tensorflow.keras.models import load_model
         _model = load_model(MODEL_PATH)
         print(f"✅ Model loaded — classes: {_model.output_shape[-1]}")
         return _model

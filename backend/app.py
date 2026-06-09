@@ -1,7 +1,9 @@
 import os
 import base64
+import threading
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
 
 from backend.model_loader import load_skin_model
 from backend.predict import predict_image
@@ -14,8 +16,29 @@ BASE_DIR      = os.path.abspath(os.path.dirname(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "..", "static", "uploaded_images")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ── Load model ONCE at startup ────────────────────────────────────────────────
-model = load_skin_model()
+# ── Load model in background thread (port binds immediately) ─────────────────
+model        = None
+model_status = "loading"
+load_error   = ""
+
+
+def _load_model_bg():
+    global model, model_status, load_error
+    try:
+        result = load_skin_model()
+        if result is None:
+            model_status = "failed"
+            load_error   = "load_skin_model() returned None"
+        else:
+            model        = result
+            model_status = "ready"
+            load_error   = ""
+    except Exception as e:
+        model_status = "failed"
+        load_error   = str(e)
+
+
+threading.Thread(target=_load_model_bg, daemon=True).start()
 
 # ── Disease information ───────────────────────────────────────────────────────
 DISEASE_INFO = {
@@ -105,11 +128,30 @@ def home():
     return render_template("index.html")
 
 
+@app.route("/debug")
+def debug():
+    from backend.model_loader import MODEL_PATH, HF_REPO_ID, HF_TOKEN
+    return jsonify({
+        "model_loaded":          model is not None,
+        "model_status":          model_status,
+        "model_path":            MODEL_PATH,
+        "model_exists_on_disk":  os.path.exists(MODEL_PATH),
+        "HF_REPO_ID":            HF_REPO_ID or "NOT SET",
+        "HF_TOKEN_set":          HF_TOKEN is not None,
+        "load_error":            load_error or "none",
+    })
+
+
 @app.route("/predict", methods=["POST"])
 def predict():
+    if model_status == "loading":
+        return jsonify({
+            "error": "Model is still loading, please wait 30 seconds and try again."
+        }), 503
+
     if model is None:
         return jsonify({
-            "error": "Model not loaded. The model file could not be downloaded or is missing."
+            "error": f"Model failed to load. Reason: {load_error}. Visit /debug for details."
         }), 500
 
     if "image" not in request.files:
@@ -127,7 +169,7 @@ def predict():
     try:
         image_bytes = file.read()
 
-        save_path = os.path.join(UPLOAD_FOLDER, file.filename)
+        save_path = os.path.join(UPLOAD_FOLDER, secure_filename(file.filename))
         with open(save_path, "wb") as f:
             f.write(image_bytes)
 
