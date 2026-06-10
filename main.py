@@ -2,6 +2,7 @@ import os
 import io
 import base64
 import shutil
+import threading
 import numpy as np
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
@@ -20,23 +21,16 @@ IMG_SIZE      = (224, 224)
 os.makedirs(MODEL_DIR, exist_ok=True)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# ── Hugging Face config (set these in Render Environment tab) ─────────────────
-HF_REPO_ID  = os.environ.get("HF_REPO_ID", "")
+# ── Hugging Face config ───────────────────────────────────────────────────────
+HF_REPO_ID  = os.environ.get("HF_REPO_ID", "").strip()
 HF_FILENAME = "skin_model.h5"
-HF_TOKEN    = os.environ.get("HF_TOKEN", None)
+HF_TOKEN    = os.environ.get("HF_TOKEN", "").strip() or None
 
 # ── Class names ───────────────────────────────────────────────────────────────
 CLASS_NAMES = [
-    "Atopic Dermatitis",
-    "Basal Cell",
-    "Benign Keratosis",
-    "Eczema",
-    "Melanocytic",
-    "Melanoma",
-    "Psoriasis",
-    "Seborrheic",
-    "Tinea Ringworms Candidiasis",
-    "Warts Molluscum",
+    "Atopic Dermatitis", "Basal Cell", "Benign Keratosis", "Eczema",
+    "Melanocytic", "Melanoma", "Psoriasis", "Seborrheic",
+    "Tinea Ringworms Candidiasis", "Warts Molluscum",
 ]
 
 # ── Disease info ──────────────────────────────────────────────────────────────
@@ -103,7 +97,7 @@ DISEASE_INFO = {
     },
 }
 
-# ── Model loading ─────────────────────────────────────────────────────────────
+# ── Model state ───────────────────────────────────────────────────────────────
 model        = None
 load_error   = ""
 model_status = "loading"
@@ -112,59 +106,53 @@ model_status = "loading"
 def download_from_hf():
     global load_error
     if not HF_REPO_ID:
-        load_error = "HF_REPO_ID environment variable is not set in Render"
+        load_error = "HF_REPO_ID is not set in Render Environment Variables"
         print(f"❌ {load_error}")
         return False
     try:
         from huggingface_hub import hf_hub_download
-        print(f"⬇️  Downloading model from Hugging Face: {HF_REPO_ID}/{HF_FILENAME}")
+        print(f"⬇️  Downloading: {HF_REPO_ID}/{HF_FILENAME}")
         downloaded = hf_hub_download(
             repo_id=HF_REPO_ID,
             filename=HF_FILENAME,
             token=HF_TOKEN,
         )
         shutil.copy(downloaded, MODEL_PATH)
-        print(f"✅ Model downloaded to: {MODEL_PATH}")
+        print(f"✅ Saved to: {MODEL_PATH}")
         return True
     except Exception as e:
         load_error = str(e)
-        print(f"❌ Hugging Face download failed: {e}")
+        print(f"❌ Download failed: {e}")
         return False
+
 
 def load_skin_model():
     global model, load_error, model_status
     model_status = "loading"
 
-
     if not os.path.exists(MODEL_PATH):
         ok = download_from_hf()
         if not ok:
+            model_status = "failed"
             return
 
     try:
-    import tensorflow as tf
+        import tensorflow as tf
+        print("📂 Loading model...")
+        model = tf.keras.models.load_model(MODEL_PATH)
+        print(f"✅ Model ready — classes: {model.output_shape[-1]}")
+        load_error   = ""
+        model_status = "ready"
+    except Exception as e:
+        load_error   = str(e)
+        model_status = "failed"
+        print(f"❌ Could not load model: {e}")
+        if os.path.exists(MODEL_PATH):
+            os.remove(MODEL_PATH)
+        model = None
 
-    print(f"📂 Loading model from: {MODEL_PATH}")
 
-    model = tf.keras.models.load_model(MODEL_PATH)
-
-    print(f"✅ Model loaded — output classes: {model.output_shape[-1]}")
-
-    load_error = ""
-    model_status = "ready"
-
-except Exception as e:
-    load_error = str(e)
-    print(f"❌ Could not load model: {e}")
-
-    # ❌ DO NOT DELETE MODEL FILE
-    # if os.path.exists(MODEL_PATH):
-    #     os.remove(MODEL_PATH)
-
-    model = None   # ✅ FIXED
-    model_status = "failed"
-
-# ── Start model loading in background (port binds immediately) ────────────────
+# ── Load model in background thread so port binds immediately ─────────────────
 threading.Thread(target=load_skin_model, daemon=True).start()
 
 
@@ -195,16 +183,25 @@ def index():
     return render_template("index.html")
 
 
-# ── DEBUG endpoint — visit /debug in browser to see model status ──────────────
+@app.route("/health")
+def health():
+    return jsonify({
+        "status":      model_status,
+        "model_ready": model is not None,
+        "error":       load_error or None,
+    })
+
+
 @app.route("/debug")
 def debug():
     return jsonify({
-        "model_loaded":   model is not None,
-        "model_path":     MODEL_PATH,
+        "model_loaded":         model is not None,
+        "model_status":         model_status,
+        "model_path":           MODEL_PATH,
         "model_exists_on_disk": os.path.exists(MODEL_PATH),
-        "HF_REPO_ID":     HF_REPO_ID or "NOT SET",
-        "HF_TOKEN_set":   HF_TOKEN is not None,
-        "load_error":     load_error or "none",
+        "HF_REPO_ID":           HF_REPO_ID or "NOT SET",
+        "HF_TOKEN_set":         HF_TOKEN is not None,
+        "load_error":           load_error or "none",
     })
 
 
@@ -241,8 +238,8 @@ def predict():
     image_data_url = f"data:{media_type};base64,{base64.b64encode(image_bytes).decode()}"
 
     try:
-        preds = model.predict(preprocess_image(image_bytes))[0]
-        n     = len(preds)
+        preds  = model.predict(preprocess_image(image_bytes))[0]
+        n      = len(preds)
         labels = CLASS_NAMES[:n] if len(CLASS_NAMES) >= n \
             else CLASS_NAMES + [f"Class_{i}" for i in range(len(CLASS_NAMES), n)]
 
