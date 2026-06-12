@@ -1,7 +1,14 @@
+# Virtual environment
+test_env/
+venv/
+env/
+
+# Python cache
 __pycache__/
 *.pyc
-venv/
-models/
-dataset/
-.DS_Storeupload.py
-.vscode/
+
+# Model files (optional)
+*.h5
+
+# Mac files
+.DS_Store
