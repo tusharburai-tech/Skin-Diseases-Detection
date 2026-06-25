@@ -1,6 +1,7 @@
 flask
+flask-cors
+gunicorn
 numpy
 pillow
 tensorflow
 huggingface_hub
-gunicorn
