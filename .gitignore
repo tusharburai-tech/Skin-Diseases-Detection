@@ -1,14 +1,33 @@
-# Virtual environment
+# Virtual environments
 test_env/
 venv/
 env/
+.env/
+.venv/
 
-# Python cache
+# Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
 
-# Model files (optional)
+# Model files (downloaded at runtime from Hugging Face)
+models/
 *.h5
+*.keras
 
-# Mac files
+# Uploaded images (generated at runtime, no need in repo)
+static/uploaded_images/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# macOS
 .DS_Store
+
+# Logs
+*.log

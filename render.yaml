@@ -6,4 +6,8 @@ services:
     startCommand: gunicorn main:app --config gunicorn.conf.py
     envVars:
       - key: PYTHON_VERSION
-        value: 3.10.0
+        value: "3.10.0"
+      - key: HF_REPO_ID
+        value: ""   # ← set your Hugging Face repo ID here
+      - key: HF_TOKEN
+        value: ""   # ← set your HF token here (if private repo)
