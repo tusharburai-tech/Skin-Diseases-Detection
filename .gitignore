@@ -1,33 +1,37 @@
-# Virtual environments
+# ── Virtual environments ──────────────────────────────────
 test_env/
 venv/
 env/
 .env/
 .venv/
+ENV/
 
-# Python
+# ── Python cache ──────────────────────────────────────────
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
 .Python
 
-# Model files (downloaded at runtime from Hugging Face)
+# ── Model files (downloaded at runtime from Hugging Face) ─
 models/
 *.h5
 *.keras
+*.pb
+*.ckpt
 
-# Uploaded images (generated at runtime, no need in repo)
+# ── Uploaded images (generated at runtime) ────────────────
 static/uploaded_images/
 
-# Jupyter
+# ── Jupyter ───────────────────────────────────────────────
 .ipynb_checkpoints/
 
-# VS Code
+# ── VS Code ───────────────────────────────────────────────
 .vscode/
 
-# macOS
+# ── macOS ─────────────────────────────────────────────────
 .DS_Store
+__MACOSX/
 
-# Logs
+# ── Logs ──────────────────────────────────────────────────
 *.log
