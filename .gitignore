@@ -1,37 +1,16 @@
-# ── Virtual environments ──────────────────────────────────
 test_env/
 venv/
 env/
 .env/
 .venv/
-ENV/
-
-# ── Python cache ──────────────────────────────────────────
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
-.Python
-
-# ── Model files (downloaded at runtime from Hugging Face) ─
 models/
 *.h5
 *.keras
-*.pb
-*.ckpt
-
-# ── Uploaded images (generated at runtime) ────────────────
 static/uploaded_images/
-
-# ── Jupyter ───────────────────────────────────────────────
-.ipynb_checkpoints/
-
-# ── VS Code ───────────────────────────────────────────────
-.vscode/
-
-# ── macOS ─────────────────────────────────────────────────
 .DS_Store
 __MACOSX/
-
-# ── Logs ──────────────────────────────────────────────────
 *.log
+.vscode/
+echo "models/" >> .gitignore
